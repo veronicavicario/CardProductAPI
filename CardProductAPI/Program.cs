@@ -1,26 +1,29 @@
-using System.Reflection;
 using System.Text.Json.Serialization;
-using CardProductAPI;
-using CardProductAPI.Features.Cards;
+using CardProductAPI.Commons.Validators;
+using CardProductAPI.Infrastructure.Dtos;
+using CardProductAPI.Models;
 using CardProductAPI.Models.Data;
+using CardProductAPI.Repository;
 using CardProductAPI.Services;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddCors();
-builder.Services.AddMvc();
-builder.Services.AddSqlite<CardProductContext>("Data Source=Card.db");
-builder.Services.AddMediatR(configuration => 
-    configuration.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
-builder.Services.AddSingleton<PostCardRequest>();
+
+builder.Services.AddScoped<IValidator<CardDto>, CardValidator>();
+builder.Services.AddScoped<IValidator<ContractDto>, ContractValidator>();
+
+builder.Services.AddScoped<IRepository<Contract>, Repository<Contract>>();
+builder.Services.AddScoped<IContractService, ContractService>();
+
+builder.Services.AddSqlite<CardProductContext>(builder.Configuration.GetConnectionString("Default"));
+builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<Program>());
+
 builder.Services.AddControllers().AddJsonOptions(x =>{
-// serialize enums as strings in api responses (e.g. Role)
     x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());});
 
 var app = builder.Build();
