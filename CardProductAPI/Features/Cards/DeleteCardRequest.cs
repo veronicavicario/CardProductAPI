@@ -1,15 +1,12 @@
-using CardProductAPI.Commons.Exceptions;
 using CardProductAPI.Models.Data;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CardProductAPI.Features.Cards;
 
-public class DeleteCardRequest : IRequest<long>
-{
-    public long CardId { get; set; }
-}
+public record DeleteCardRequest(long CardId) : IRequest<Unit>;
 
-public class DeleteRequestHandler : IRequestHandler<DeleteCardRequest, long>
+public class DeleteRequestHandler : IRequestHandler<DeleteCardRequest, Unit>
 {
     private readonly CardProductContext _context;
 
@@ -18,15 +15,9 @@ public class DeleteRequestHandler : IRequestHandler<DeleteCardRequest, long>
         _context = context;
     }
 
-    public Task<long> Handle(DeleteCardRequest request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(DeleteCardRequest request, CancellationToken cancellationToken)
     {
-        var cardToDelete = _context.Cards.Find(request.CardId);
-        if (cardToDelete is null)
-            throw new CardProductException(string.Format("Invalid Card ID = {0}", request.CardId));
-
-        _context.Cards.Remove(_context.Cards.Single(c => c.Id == request.CardId));
-        _context.SaveChangesAsync();
-
-        return Task.FromResult(request.CardId);
+        await _context.Cards.Where(c => c.Id == request.CardId).ExecuteDeleteAsync(cancellationToken); 
+        return Unit.Value;
     }
 }

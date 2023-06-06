@@ -5,11 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CardProductAPI.Features.Cards;
 
-public class GetCardsByUserIdRequest : IRequest<List<Card>>
-{
-    public long UserId { get; set; }
-}
-
+public record GetCardsByUserIdRequest(long UserId) : IRequest<List<Card>>;
+    
 public class GetCardsRequestHandler : IRequestHandler<GetCardsByUserIdRequest, List<Card>>
 {
     private readonly CardProductContext _context;
@@ -19,13 +16,13 @@ public class GetCardsRequestHandler : IRequestHandler<GetCardsByUserIdRequest, L
         _context = context;
     }
 
-    public Task<List<Card>> Handle(GetCardsByUserIdRequest byUserIdRequest, CancellationToken cancellationToken)
+    public async Task<List<Card>> Handle(GetCardsByUserIdRequest byUserIdRequest, CancellationToken cancellationToken)
     {
-        var cards = _context.Cards
+        var cards = await _context.Cards
             .Where(c => c.UserId == byUserIdRequest.UserId)
             .Include(card => card.Contract)
             .AsNoTracking()
-            .ToList();
-        return Task.FromResult(cards);
+            .ToListAsync(cancellationToken);
+        return cards;
     }
 }

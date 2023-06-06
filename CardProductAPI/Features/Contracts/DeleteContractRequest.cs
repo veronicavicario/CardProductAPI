@@ -1,15 +1,12 @@
-using CardProductAPI.Commons.Exceptions;
 using CardProductAPI.Models.Data;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CardProductAPI.Features.Contracts;
 
-public class DeleteContractRequest : IRequest<long>
-{
-    public long ContractId { get; set; }
-}
+public record DeleteContractRequest(long ContractId) : IRequest<Unit>;
 
-public class DeleteRequestHandler : IRequestHandler<DeleteContractRequest, long>
+public class DeleteRequestHandler : IRequestHandler<DeleteContractRequest, Unit>
 {
     private readonly CardProductContext _context;
 
@@ -18,15 +15,9 @@ public class DeleteRequestHandler : IRequestHandler<DeleteContractRequest, long>
         _context = context;
     }
 
-    public Task<long> Handle(DeleteContractRequest request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(DeleteContractRequest request, CancellationToken cancellationToken)
     {
-        var contractToDelete = _context.Contract.Find(request.ContractId);
-        if (contractToDelete is null)
-            throw new CardProductException(string.Format("Invalid Contract ID = {0}", request.ContractId));
-
-        _context.Contract.Remove(_context.Contract.Single(c => c.Id == request.ContractId));
-        _context.SaveChangesAsync();
-
-        return Task.FromResult(request.ContractId);
+        await _context.Contract.Where(c => c.Id == request.ContractId).ExecuteDeleteAsync(cancellationToken);
+        return Unit.Value;
     }
 }

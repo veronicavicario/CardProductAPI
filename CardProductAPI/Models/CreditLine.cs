@@ -5,7 +5,7 @@ namespace CardProductAPI.Models;
 public class CreditLine
 {
     public long Id { get; set; }
-    
+
     public string Code { get; set; }
     
     [Required]

@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CardProductAPI.Features.Contracts;
 
-public class GetContractsRequest: IRequest<List<Contract>>
-{
-}
+public record GetContractsRequest() : IRequest<List<Contract>>;
 
 public class GetRequestHandler : IRequestHandler<GetContractsRequest, List<Contract>>
 {

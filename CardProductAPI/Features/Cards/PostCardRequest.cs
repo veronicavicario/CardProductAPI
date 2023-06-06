@@ -1,15 +1,12 @@
 using CardProductAPI.Commons.Exceptions;
+using CardProductAPI.Infrastructure.Dtos;
 using CardProductAPI.Models;
 using CardProductAPI.Models.Data;
-using CardProductAPI.Models.Dtos;
 using MediatR;
 
 namespace CardProductAPI.Features.Cards;
 
-public class PostCardRequest : IRequest<Card>
-{
-    public CardDto CardDto { get; set; }
-}
+public record PostCardRequest(CardDto CardDto) : IRequest<Card>;
 
 public class PostCardRequestHandler : IRequestHandler<PostCardRequest, Card>
 {
@@ -20,21 +17,16 @@ public class PostCardRequestHandler : IRequestHandler<PostCardRequest, Card>
         _context = context;
     }
 
-    public Task<Card> Handle(PostCardRequest request, CancellationToken cancellationToken)
+    public async Task<Card> Handle(PostCardRequest request, CancellationToken cancellationToken)
     {
-        var contract = _context.Contract.FirstOrDefault(c => c.Id == request.CardDto.ContractId);
-
-        if (contract is null)
-            throw new CardProductException("Contract does not exist and it's required to create a card");
-
-        var cardDto = request.CardDto;
-
-        var card = CreateCard(cardDto, contract);
-
-        _context.Cards.Add(card);
-        _context.SaveChanges();
-
-        return Task.FromResult(card);
+        var contract = _context.Contract.FirstOrDefault(c => c.Id == request.CardDto.ContractId)
+            ?? throw new CardProductException("Contract does not exist and it's required to create a card");
+        
+        var card = CreateCard(request.CardDto, contract);
+        await _context.Cards.AddAsync(card, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        
+        return card;
     }
 
     private Card CreateCard(CardDto cardDto, Contract contract)
@@ -46,7 +38,7 @@ public class PostCardRequestHandler : IRequestHandler<PostCardRequest, Card>
         card.UserId = cardDto.UserId;
         card.Code = cardDto.Code;
         card.Contract = contract;
-        card.CreatedAt = cardDto.CreatedAt;
+        card.CreatedAt = new DateOnly();
         card.Country = cardDto.Country;
         return card;
     }
