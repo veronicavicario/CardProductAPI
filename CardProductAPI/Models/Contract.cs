@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using CardProductAPI.Commons.Enums;
 
 namespace CardProductAPI.Models;
