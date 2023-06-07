@@ -18,7 +18,10 @@ builder.Services.AddScoped<IValidator<CardDto>, CardValidator>();
 builder.Services.AddScoped<IValidator<ContractDto>, ContractValidator>();
 
 builder.Services.AddScoped<IRepository<Contract>, Repository<Contract>>();
+builder.Services.AddScoped<IRepository<Card>, Repository<Card>>();
+
 builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<ICardService, CardService>();
 
 builder.Services.AddSqlite<CardProductContext>(builder.Configuration.GetConnectionString("Default"));
 builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<Program>());

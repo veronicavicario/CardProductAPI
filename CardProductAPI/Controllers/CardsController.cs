@@ -1,10 +1,7 @@
 using CardProductAPI.Commons.Pagination;
-using CardProductAPI.Commons.Validators;
-using CardProductAPI.Features.Cards;
 using CardProductAPI.Infrastructure.Dtos;
-using CardProductAPI.Models;
+using CardProductAPI.Services;
 using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CardProductAPI.Controllers;
@@ -13,23 +10,23 @@ namespace CardProductAPI.Controllers;
 [Route("api/[controller]")]
 public class CardsController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly ICardService _cardService;
     private readonly IValidator<CardDto> _validator;
 
-    public CardsController(IMediator mediator, IValidator<CardDto> validator) {
-        _mediator = mediator;
+    public CardsController(ICardService cardService, IValidator<CardDto> validator) {
+        _cardService = cardService;
         _validator = validator;
     }
     
     /**
-     * Get all the cards related to the specified user id
+     * Get all the cards related to the specified contract id
      */
-    [HttpGet("userId/{userId:long}")]
-    public async Task<IActionResult> GetCardsByUserId(long userId)
+    [HttpGet("contract/{contractId:long}")]
+    public async Task<IActionResult> GetCardsByUserId(long contractId)
     {
-        var response =
-            await _mediator.Send(new GetCardsByUserIdRequest(userId), HttpContext.RequestAborted);
-        return Ok(response);
+        var cardsPaginated =
+            await _cardService.GetAllCardsByContractId(contractId, HttpContext.RequestAborted);
+        return Ok(cardsPaginated);
     }
 
     /**
@@ -38,7 +35,7 @@ public class CardsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetCards([FromQuery] PaginationFilter filter)
     {
-        var cardsPaginated = await _mediator.Send(new GetCardsRequest(filter), HttpContext.RequestAborted);
+        var cardsPaginated = await _cardService.GetAllCards(filter, HttpContext.RequestAborted);
         return Ok(cardsPaginated);
     }
 
@@ -46,10 +43,10 @@ public class CardsController : ControllerBase
      * Create card associated to the specific contract
      */
     [HttpPost]
-    public async Task<IActionResult> CreateCard([FromBody] PostCardRequest cardRequest)
+    public async Task<IActionResult> CreateCard([FromBody] CardDto cardDto)
     {
-        await _validator.ValidateAsync(cardRequest.CardDto, options => options.ThrowOnFailures());
-        var card = await _mediator.Send(cardRequest, HttpContext.RequestAborted);
+        await _validator.ValidateAsync(cardDto, options => options.ThrowOnFailures());
+        var card = _cardService.CreateCard(cardDto, HttpContext.RequestAborted);
         return Ok(card);
     }
 
@@ -59,7 +56,7 @@ public class CardsController : ControllerBase
     [HttpDelete("{cardId:long}")]
     public async Task<IActionResult> DeleteCard(long cardId)
     {
-        await _mediator.Send(new DeleteCardRequest(cardId), HttpContext.RequestAborted);
+        await _cardService.DeleteCard(cardId, HttpContext.RequestAborted);
         return NoContent();
     }
 }
