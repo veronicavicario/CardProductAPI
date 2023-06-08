@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using CardProductAPI.Commons.Filters;
 using CardProductAPI.Commons.Validators;
 using CardProductAPI.Infrastructure.Dtos;
 using CardProductAPI.Models;
@@ -6,6 +7,7 @@ using CardProductAPI.Models.Data;
 using CardProductAPI.Repository;
 using CardProductAPI.Services;
 using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +28,8 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddSqlite<CardProductContext>(builder.Configuration.GetConnectionString("Default"));
 builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<Program>());
 
-builder.Services.AddControllers().AddJsonOptions(x =>{
+builder.Services.AddControllers(options => options.Filters.Add<CardProductExceptionFilter>())
+    .AddJsonOptions(x =>{
     x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());});
 
 var app = builder.Build();

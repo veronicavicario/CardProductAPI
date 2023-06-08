@@ -56,7 +56,7 @@ public class CardService : ICardService
           expression[0] = x => x.Id == cardId;
           
           var card = await _repository.GetWithFilter(expression).SingleOrDefaultAsync(cancellationToken) 
-                                    ?? throw new CardProductException("Card does not exists.");
+                                    ?? throw new NotFoundException("Card does not exists.");
           return card;
      }
 

@@ -45,7 +45,7 @@ public class ContractService : IContractService
 
 
           var contract = await _repository.GetWithFilter(expression).SingleOrDefaultAsync(cancellationToken) 
-                                    ?? throw new CardProductException("Contract does not exists.");
+                                    ?? throw new NotFoundException("Contract does not exists.");
           return contract;
 
      }
