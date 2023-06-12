@@ -2,10 +2,12 @@ using CardProductAPI.Commons.Pagination;
 using CardProductAPI.Infrastructure.Dtos;
 using CardProductAPI.Services;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CardProductAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class CardsController : ControllerBase
