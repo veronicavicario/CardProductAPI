@@ -24,7 +24,7 @@ public class CardsController : ControllerBase
      * Get all the cards related to the specified contract id
      */
     [HttpGet("contract/{contractId:long}")]
-    public async Task<IActionResult> GetCardsByUserId(long contractId)
+    public async Task<IActionResult> GetCardsContractId(long contractId)
     {
         var cardsPaginated =
             await _cardService.GetAllCardsByContractId(contractId, HttpContext.RequestAborted);

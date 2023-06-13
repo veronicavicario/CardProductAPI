@@ -100,4 +100,23 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.Use(async (context, next) =>
+{ 
+    var headers = context.Request.Headers;
+    
+    Console.WriteLine($"  - Endpoint: {context.Request.Method} - {context.Request.Path}");
+    
+    foreach (var header in headers)
+    {
+        Console.WriteLine($"  - Header: {header}");
+    }
+    await next(context);
+});
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+
 app.Run();
