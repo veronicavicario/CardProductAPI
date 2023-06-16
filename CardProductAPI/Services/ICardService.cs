@@ -3,6 +3,7 @@ using CardProductAPI.Commons.Exceptions;
 using CardProductAPI.Commons.Pagination;
 using CardProductAPI.Infrastructure.Dtos;
 using CardProductAPI.Models;
+using CardProductAPI.RabbitMQ.Producer;
 using CardProductAPI.Repository;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,11 +23,13 @@ public class CardService : ICardService
 {
      private readonly IRepository<Card> _repository;
      private readonly IContractService _contractService;
+     private readonly IMessageProducer _messageProducer;
 
-     public CardService(IRepository<Card> repository, IContractService contractService)
+     public CardService(IRepository<Card> repository, IContractService contractService, IMessageProducer messageProducer)
      {
           _repository = repository;
           _contractService = contractService;
+          _messageProducer = messageProducer;
      }
      
      public async Task<PagedResponse<List<Card>>> GetAllCards(PaginationFilter paginationFilter, CancellationToken cancellationToken)
@@ -47,6 +50,7 @@ public class CardService : ICardService
           var contract = _contractService.GetContractById(cardDto.ContractId, cancellationToken);
           var card = CreateAndGetCard(cardDto, contract.Result); 
           _repository.AddData(card, cancellationToken);
+          _messageProducer.SendMessage(card, "cards");
           return card;  
      }
 

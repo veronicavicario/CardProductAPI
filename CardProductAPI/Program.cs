@@ -5,12 +5,15 @@ using CardProductAPI.Commons.Validators;
 using CardProductAPI.Infrastructure.Dtos;
 using CardProductAPI.Models;
 using CardProductAPI.Models.Data;
+using CardProductAPI.RabbitMQ.Listener;
+using CardProductAPI.RabbitMQ.Producer;
 using CardProductAPI.Repository;
 using CardProductAPI.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +32,6 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddTransient<ITokenService, TokenService>();
 
 builder.Services.AddSqlite<CardProductContext>(builder.Configuration.GetConnectionString("Default"));
-builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<Program>());
 
 builder.Services.AddControllers(options => options.Filters.Add<CardProductExceptionFilter>())
     .AddJsonOptions(x =>{
@@ -50,7 +52,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorization();
-
 
 builder.Services.AddSwaggerGen(setup =>
 { 
@@ -78,6 +79,29 @@ builder.Services.AddSwaggerGen(setup =>
     });
 
 });
+// RabbitMQ Configuration
+ConnectionFactory connectionFactory = new ConnectionFactory
+{
+    HostName = builder.Configuration["RabbitMQ:HostName"],
+    UserName = builder.Configuration["RabbitMQ:UserName"],
+    Password = builder.Configuration["RabbitMQ:Password"],
+    DispatchConsumersAsync = true
+};
+var connection = connectionFactory.CreateConnection();
+var channel = connection.CreateModel();
+channel.QueueDeclare(queue: "cards",
+    durable: false,
+    exclusive: false,
+    autoDelete: false,
+    arguments: null);
+
+// accept only one unack-ed message at a time
+
+channel.BasicQos(0, 1, false);
+RabbitMqReceiver messageReceiver = new RabbitMqReceiver(channel);
+channel.BasicConsume("cards", false, messageReceiver);
+builder.Services.AddScoped<IMessageProducer, RabbitMqProducer>(serviceProvider => new RabbitMqProducer(channel));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -91,8 +115,6 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
     options.RoutePrefix = string.Empty;
 });
-
-
 
 app.UseHttpsRedirection();
 
@@ -117,6 +139,5 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 app.Run();

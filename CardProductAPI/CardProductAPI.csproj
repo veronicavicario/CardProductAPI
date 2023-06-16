@@ -16,12 +16,14 @@
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.5" />
+      <PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Infrastructure\" />
       <Folder Include="Migrations\" />
+      <Folder Include="RabbitMQ\" />
     </ItemGroup>
 
 </Project>

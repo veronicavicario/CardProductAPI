@@ -2,7 +2,21 @@
 
 Dotnet Version 7.0
 
+# Message Broker: RabbitMQ
+**Docker img:** rabbitmq
+
+**Url:**
+http://localhost:15672/
+
+**Default Login:**
+
+* **user** -> guest
+* **password** -> guest
+
+When card is created a message is published to a queue. It is received in the same project (only for testing purpose)
+
 # Authentication
+
 Authenticate using sign-in endpoint to get the token that will be use to interact with the API.
 
 `curl -X 'POST' \
